@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marshy's Musings</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a workbench. The stick and the phone sit side by side, controls under each; two reference tabs behind. */
+:root {
+  --bg: #f3ede4; --fg: #2a211a; --muted: #6f604f; --panel: #fbf8f2; --line: #dccfbf;
+  --accent: #e8893a; --accent-deep: #b4581a; --cream: #f6e8cf;
+  --display: 'Sora', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1a1613; --fg: #efe6dc; --muted: #b3a394; --panel: #241e1a; --line: #3a3029; --accent: #f2a35b; --accent-deep: #f2a35b; --cream: #2e2621; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1a1613; --fg: #efe6dc; --muted: #b3a394; --panel: #241e1a; --line: #3a3029; --accent: #f2a35b; --accent-deep: #f2a35b; --cream: #2e2621; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--display); line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+header img { height: 72px; image-rendering: pixelated; }
+h1 { font-size: 1.7rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.tag { color: var(--muted); margin: 2px 0 0; font-size: .95rem; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.chip { font-family: var(--mono); font-size: .75rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 22px; overflow-x: auto; }
+nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: 600 .95rem var(--display); color: var(--muted); cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.bench { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
+@media (max-width: 820px) { .bench { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+.panel h2 { font-size: 1.05rem; margin: 0 0 6px; }
+p { max-width: 65ch; }
+.note { color: var(--muted); font-size: .9rem; margin: 0 0 6px; }
+
+/* The StickS3 at its real proportions: body 48 x 24 mm, active screen 22.3 x 12.6 mm,
+   KEY1 the big blue key at the USB end, KEY2 on the long edge above the screen's right third.
+   --w is the body width; every part is placed in millimetres of it. Upright, the whole
+   device turns a quarter clockwise (KEY1 below the screen) and the screen image is drawn
+   turned the other way, as the firmware does. */
+.stick { display: flex; justify-content: center; align-items: center; padding: 26px 0 14px; transition: min-height .3s; --w: min(520px, calc(100vw - 96px)); min-height: calc(var(--w) * .5 + 40px); }
+.stick.up { min-height: calc(var(--w) + 30px); }
+.device { --mm: calc(var(--w) / 48); position: relative; width: var(--w); height: calc(var(--mm) * 24); border-radius: calc(var(--mm) * 4.5);
+  background: linear-gradient(180deg, #4a4a4f, #34343a 55%, #2c2c31); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -2px 0 rgba(0,0,0,.35), 0 14px 30px rgba(0,0,0,.35);
+  transition: transform .35s ease; flex: none; }
+.stick.up .device { transform: rotate(90deg); }
+.glass { position: absolute; left: calc(var(--mm) * 2.2); top: calc(var(--mm) * 2.6); width: calc(var(--mm) * 29.4); height: calc(var(--mm) * 18.8);
+  background: #050506; border-radius: calc(var(--mm) * 1.6); box-shadow: inset 0 0 0 1px #000, 0 0 0 1px #222; }
+.glass canvas { position: absolute; left: calc(var(--mm) * 3.55); top: calc(var(--mm) * 3.1); width: calc(var(--mm) * 22.3); height: calc(var(--mm) * 12.6); image-rendering: pixelated; display: block; }
+.k1btn { position: absolute; left: calc(var(--mm) * 35.6); top: calc(var(--mm) * 3.6); width: calc(var(--mm) * 6.4); height: calc(var(--mm) * 16.8); border-radius: calc(var(--mm) * 3.2);
+  border: 0; cursor: pointer; background: linear-gradient(180deg, #2f86e8, #1f63b8); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 2px 0 #123c70; padding: 0; }
+.k1btn:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+.k2btn { position: absolute; left: calc(var(--mm) * 20); top: calc(var(--mm) * -1.1); width: calc(var(--mm) * 7); height: calc(var(--mm) * 1.3); border-radius: calc(var(--mm) * .6) calc(var(--mm) * .6) 0 0;
+  border: 0; padding: 0; cursor: pointer; background: #5b5b62; }
+.usb { position: absolute; right: calc(var(--mm) * -.4); top: calc(var(--mm) * 8.4); width: calc(var(--mm) * 1); height: calc(var(--mm) * 7.2); border-radius: calc(var(--mm) * .5); background: #18181b; }
+.mic { position: absolute; left: calc(var(--mm) * 45.3); top: calc(var(--mm) * 3.2); width: calc(var(--mm) * .9); height: calc(var(--mm) * .9); border-radius: 50%; background: #111; }
+.k1btn:focus-visible, .k2btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.keys { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.key { font: 600 .85rem var(--display); padding: 9px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--cream); color: var(--fg); cursor: pointer; }
+.key.k1 { background: #0a6fd6; color: #fff; border-color: transparent; }
+.key.on { outline: 2px solid var(--accent); }
+.key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.key:active { transform: translateY(1px); }
+.stat { font-family: var(--mono); font-size: .78rem; color: var(--muted); margin-top: 10px; }
+
+.phone { margin: 0 auto; width: 310px; max-width: 100%; height: 600px; border-radius: 30px; background: #111; padding: 10px; box-shadow: 0 14px 30px rgba(0,0,0,.35); }
+.screen { height: 100%; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; background: #fcf6ee; color: #1f1a16; font-size: 13px; }
+.app-bar { display: flex; align-items: center; gap: 10px; padding: 16px 14px 10px; }
+.app-bar img { height: 40px; image-rendering: pixelated; }
+.app-bar .t { font-weight: 700; font-size: 17px; line-height: 1.2; }
+.app-bar .s { font-size: 11px; color: #6b5b4c; }
+.app-bar .sync { margin-left: auto; font: 600 12px var(--display); background: #ffdcc0; color: #3a1f08; border: 0; border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+.app-body { flex: 1; overflow-y: auto; padding: 0 12px 12px; min-height: 0; }
+.day { font: 600 11px var(--display); color: #b4581a; letter-spacing: .04em; text-transform: uppercase; margin: 10px 0 4px; }
+.card { background: #f4eadf; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+.card .top { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12.5px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.card .top .time { margin-left: auto; font-weight: 400; color: #53463b; white-space: nowrap; }
+.card .body { margin-top: 4px; color: #2b2320; white-space: pre-line; }
+.card .body.pending { color: #b4581a; }
+.card .foot { font-size: 10.5px; color: #857668; margin-top: 4px; }
+.empty { text-align: center; padding: 30px 14px; color: #53463b; }
+.empty img { height: 90px; image-rendering: pixelated; }
+.nav { display: flex; border-top: 1px solid #e6d8c6; background: #f4eadf; }
+.nav button { flex: 1; border: 0; background: none; font: 600 11px var(--display); color: #53463b; padding: 10px 0 12px; cursor: pointer; }
+.nav button[aria-selected="true"] { color: #b4581a; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ebdfd0; }
+.row b { display: block; font-size: 12.5px; }
+.row span { color: #53463b; font-size: 11.5px; }
+.sec { font: 600 11px var(--display); color: #b4581a; margin: 12px 0 2px; }
+.btn { font: 600 11px var(--display); border: 0; border-radius: 999px; padding: 6px 10px; background: #ffdcc0; color: #3a1f08; cursor: pointer; white-space: nowrap; }
+.sw { width: 34px; height: 20px; border-radius: 999px; background: #b4581a; position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; top: 3px; right: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.sw.off { background: #cdbfae; } .sw.off::after { right: auto; left: 3px; }
+.ev { font-size: 11.5px; padding: 7px 0; border-bottom: 1px solid #ebdfd0; }
+.ev .k { font-family: var(--mono); font-size: 10px; color: #b4581a; margin-right: 6px; }
+pre.journal { font: 10.5px/1.45 var(--mono); background: #f4eadf; border-radius: 10px; padding: 10px; white-space: pre-wrap; margin: 6px 0 0; max-height: 220px; overflow: auto; }
+.rec { display: flex; flex-direction: column; align-items: center; padding-top: 18px; gap: 10px; }
+.rec .big { width: 130px; height: 130px; border-radius: 50%; border: 0; background: #b4581a; color: #fff; font: 700 18px var(--display); cursor: pointer; }
+.rec .big.on { background: #d93025; }
+.tchips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.tchip { font: 600 10.5px var(--display); border: 1px solid #dccfbf; background: #fff; border-radius: 999px; padding: 4px 8px; cursor: pointer; color: #2b2320; }
+.tchip.on { background: #ffdcc0; border-color: #b4581a; }
+.chipset { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.card { cursor: pointer; }
+.ai { background: #fff7ee; border: 1px solid #f0d2b4; border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
+.ai .hd { display: flex; align-items: center; gap: 6px; font: 600 11px var(--display); color: #8a4a12; }
+.ai .hd .spark { width: 18px; height: 18px; border-radius: 6px; background: linear-gradient(135deg, #f2a35b, #b4581a); color: #fff; display: grid; place-items: center; font-size: 11px; }
+.ai .txt { white-space: pre-line; margin-top: 8px; color: #2b2320; }
+.ai .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.pill { font: 600 10.5px var(--display); border: 1px solid #dccfbf; background: #fff; border-radius: 999px; padding: 4px 9px; cursor: pointer; color: #2b2320; }
+.pill.on { background: #ffdcc0; border-color: #b4581a; }
+.badge { font: 600 9.5px var(--display); background: #ffe6cf; color: #8a4a12; border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
+textarea.prompt { width: 100%; box-sizing: border-box; font: 11px/1.4 var(--display); border: 1px solid #dccfbf; border-radius: 8px; padding: 8px; background: #fff; color: #2b2320; min-height: 84px; resize: vertical; }
+.screen { position: relative; }
+.dialog { position: absolute; inset: 0; background: rgba(20,14,10,.45); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 5; }
+.dialog .box { background: #fffaf3; border-radius: 18px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+.dialog .box b { font-size: 15px; display: block; margin-bottom: 6px; }
+.dialog .box p { margin: 0 0 12px; color: #53463b; font-size: 12px; }
+.dialog .row2 { display: flex; gap: 8px; justify-content: flex-end; }
+.banner { position: absolute; left: 10px; right: 10px; top: 8px; background: #fffaf3; border-radius: 14px; padding: 9px 12px; box-shadow: 0 6px 18px rgba(0,0,0,.25); font-size: 11.5px; z-index: 6; transition: opacity .3s, transform .3s; }
+.banner b { display: block; font-size: 12px; }
+.banner[hidden] { display: block !important; opacity: 0; transform: translateY(-8px); pointer-events: none; }
+select.mini { font: 11px var(--display); border: 1px solid #dccfbf; border-radius: 8px; padding: 3px 6px; background: #fff; color: #2b2320; }
+.prog { height: 6px; background: #ead9c6; border-radius: 3px; overflow: hidden; margin-top: 6px; } .prog i { display: block; height: 100%; background: #b4581a; }
+.screen.min { background: #f5f6f8; color: #1d2329; }
+.screen.min img { display: none; }
+.screen.min .card, .screen.min .nav, .screen.min pre.journal { background: #eceff3; }
+.screen.min .day, .screen.min .sec, .screen.min .nav button[aria-selected="true"], .screen.min .back { color: #475569; }
+.screen.min .sync, .screen.min .btn, .screen.min .badge, .screen.min .pill.on, .screen.min .tchip.on { background: #dde3ea; color: #1d2329; border-color: #94a3b8; }
+.screen.min .sw { background: #475569; } .screen.min .rec .big { background: #475569; }
+.screen.min .ai { background: #f1f4f8; border-color: #cbd5e1; } .screen.min .ai .hd { color: #334155; } .screen.min .ai .hd .spark { background: #475569; }
+.back { font: 600 11.5px var(--display); color: #b4581a; background: none; border: 0; padding: 4px 0 8px; cursor: pointer; }
+
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+.step h3 { margin: 0 0 6px; font-size: .95rem; }
+.step p { margin: 0; font-size: .88rem; color: var(--muted); }
+.step .where { font: 600 .7rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-deep); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.v { font-family: var(--mono); white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+h2.secttl { font-size: 1.1rem; margin: 26px 0 10px; }
+ul.tight { margin: 6px 0 0; padding-left: 18px; }
+ul.tight li { margin: 4px 0; }
+code { font-family: var(--mono); font-size: .9em; }
+.foot { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+.foot p { margin: 4px 0; max-width: 90ch; } .foot a { color: var(--accent-deep); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <img id="hdrcat" alt="Tango, an orange pixel cat">
+  <div>
+    <h1>Marshy's Musings</h1>
+    <p class="tag">A voice recorder for the M5StickS3 and its Android companion app, side by side. A simulation: every button works, nothing is recorded.</p>
+  </div>
+  <div class="chips"><span class="chip">firmware 2.14.0</span><span class="chip">app 0.16.0</span></div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="sim">Stick + phone</button>
+  <button role="tab" aria-selected="false" data-tab="flow">How it works</button>
+  <button role="tab" aria-selected="false" data-tab="rev">Revisions</button>
+</nav>
+
+<section id="tab-sim">
+  <div class="bench">
+    <div class="panel">
+      <h2>The stick</h2>
+      <p class="note" id="hint">Drawn to scale. Settings on the stick has seven rows, including Phone (paired, or forget it). Sideways: KEY1 (the blue key) records. KEY2 (the edge button) shows the files; held, it opens Settings: seven themes including Tape, brightness, Cat Slots, Dice, web mode. Turn it upright for the tag picker, or the pay table while playing slots.</p>
+      <div class="stick" id="stickwrap"><div class="device" id="device">
+        <button class="k2btn" id="k2b" aria-label="KEY2"></button>
+        <div class="glass"><canvas id="lcd" width="240" height="135"></canvas></div>
+        <button class="k1btn" id="k1b" aria-label="KEY1"></button>
+        <div class="mic" title="microphone"></div>
+        <div class="usb" title="USB-C"></div>
+      </div></div>
+      <div class="keys">
+        <button class="key k1" id="k1">KEY1</button>
+        <button class="key" id="k2">KEY2 tap</button>
+        <button class="key" id="k2h">KEY2 hold</button>
+        <button class="key" id="rot">Turn upright</button>
+        <button class="key" id="usb">Plug in USB</button>
+      </div>
+      <div class="stat" id="stat"></div>
+    </div>
+    <div class="panel">
+      <h2>The phone</h2>
+      <p class="note">The first Sync asks to pair with the stick; after that the phone syncs on its own whenever the stick has new notes. Sync pulls what's on the stick. Each note is transcribed, then tidied by the on-device AI (Gemini Nano) with a prompt you can edit. Tap a note to compare the tidied and spoken versions or tidy it again.</p>
+      <div class="phone"><div class="screen" id="pscreen">
+        <div class="banner" id="banner" hidden><b>Marshy's Musings</b><span id="bannertxt"></span></div>
+        <div id="dlg"></div>
+        <div class="app-bar"><img id="barcat" alt=""><div><div class="t">Marshy's Musings</div><div class="s" id="syncline">Watching for the stick</div></div><button class="sync" id="sync">Sync</button></div>
+        <div class="app-body" id="body"></div>
+        <div class="nav">
+          <button aria-selected="true" data-v="notes">Notes</button>
+          <button aria-selected="false" data-v="record">Record</button>
+          <button aria-selected="false" data-v="activity">Activity</button>
+          <button aria-selected="false" data-v="settings">Settings</button>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-flow" hidden>
+  <div class="flow">
+    <div class="step"><div class="where">Stick</div><h3>Tag, then talk</h3><p>Upright, the picker chooses Work, Run or Intention and a sub-tag (sticky across power cycles), and the format: Opus 16 kHz by default, WAV when a file must play anywhere. Sideways, KEY1 starts and stops. Files are <code>run-thought_0042.opus</code>, numbered in the order spoken.</p></div>
+    <div class="step"><div class="where">Stick</div><h3>Advertise, then sleep</h3><p>Bluetooth advertises whenever the stick is on and not recording. Screen dims at 1 minute, off at 2; power off at 10 idle minutes (deep sleep on USB, KEY1 wakes). Only a real file transfer counts as activity.</p></div>
+    <div class="step"><div class="where">Phone</div><h3>Pair once, then wake and pull</h3><p>The stick has an id and remembers one phone; a new phone asks once, and taking over needs KEY1 on the stick. The stick advertises a "new notes" flag, and the paired phone's radio wakes the app only when it is set. Each file is streamed, checked for size, written, read back, and only then deleted from the stick. The app never deletes what it does not hold.</p></div>
+    <div class="step"><div class="where">Phone</div><h3>Transcribe</h3><p>whisper.cpp on the phone, in ~30-second pieces cut at quiet moments, as a foreground job. Each finished piece is saved, so a stop resumes where it left off.</p></div>
+    <div class="step"><div class="where">Phone</div><h3>Tidy, file, list</h3><p>Gemini Nano rewrites the note as bullets with your editable prompt (the spoken text is kept). Entries go into <code>musings.md</code> and per-category journals, mirrored to a Drive folder. "Add to list, …" becomes a checkbox in <code>musings-list.md</code>.</p></div>
+    <div class="step"><div class="where">Phone → stick</div><h3>Update over the air</h3><p>The app carries the matching firmware. Settings → Firmware → Update sends it over Bluetooth into the stick's spare slot; the stick checks the CRC, restarts into it, and falls back if it fails to boot.</p></div>
+  </div>
+  <h2 class="secttl">Power, in round numbers</h2>
+  <p>The ESP32-S3, mic, accelerometer and radio draw roughly 60–80 mA while on, so a 250 mAh charge is a few hours of being switched on. A ring like the Pebble Index sleeps at microamps between presses. A "sleep when idle" mode that copies that is the next candidate.</p>
+</section>
+
+<section id="tab-rev" hidden>
+  <p>What changed, in order. Firmware and app versions moved together.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Version</th><th>What it did</th></tr>
+    <tr><td class="v">fw 1.x</td><td>The original recorder: one button, WAV to flash, a Wi-Fi page to download files.</td></tr>
+    <tr><td class="v">fw 2.0</td><td>Tag picker when upright, tags in file names, bigger type, wind filter, coloured record ring, mic arrow, per-tag counts.</td></tr>
+    <tr><td class="v">fw 2.1 · app 0.1–0.4</td><td>Bluetooth transfer and the Android app: background sync, on-device Whisper, Material 3, multi-select share, Send to Claude, Activity history.</td></tr>
+    <tr><td class="v">fw 2.2–2.3 · app 0.5</td><td>Both landscape orientations, lost-recording hardening, auto power-off, battery reporting, scanning window. Renamed Marshy's Musings.</td></tr>
+    <tr><td class="v">fw 2.4 · app 0.6</td><td>Tango: sprites across the app; ears, whiskers and cats in the icons on the stick.</td></tr>
+    <tr><td class="v">fw 2.5 · app 0.7</td><td>Settings screen on the stick, <code>musings.md</code> journal with folder mirroring, wake-on-advertisement, notes grouped by day. Fixed vanishing recordings (the app now never deletes what it doesn't hold).</td></tr>
+    <tr><td class="v">fw 2.6 · app 0.8</td><td>Five themes, Files screen on KEY2, web mode moved into Settings, upright recording screen, brightness setting, power-off that actually happens. App: transcription timing and restart, rename, per-category journals, room/chorus playback.</td></tr>
+    <tr><td class="v">app 0.9–0.10</td><td>Location on each pulled note; Gemini Nano tidy-up with an editable prompt; Opus decoding; firmware updates from the app.</td></tr>
+    <tr><td class="v">fw 2.7</td><td>Opus 16 kHz by default (WAV as an option), two app slots for over-the-air updates, about 35 minutes of storage.</td></tr>
+    <tr><td class="v">fw 2.8 · app 0.11</td><td>Minimal theme, charging status (bolt + "charging"/"full"), deep sleep on USB. App: code-phrase list, record on the phone with a widget and Quick Settings tile.</td></tr>
+    <tr><td class="v">fw 2.9 · app 0.11.3</td><td>Cat Slots in Settings: weighted reels, a bank kept for good, loans with interest and a limit. App: long notes transcribe in resumable 30-second chunks as a foreground job, with real error messages.</td></tr>
+    <tr><td class="v">app 0.11.4</td><td>Transcription about 8× faster: whisper.cpp had been built unoptimised in debug APKs. The project now carries its own signing key so every build installs over the last.</td></tr>
+    <tr><td class="v">fw 2.10 · app 0.12</td><td>Dice in Settings (1–6 dice, KEY1 or a shake rolls, pairs, straights, "Snake eyes!"). Cat Slots made bigger, with a win screen for wins over 10 and the pay table when the stick is turned upright.</td></tr>
+    <tr><td class="v">fw 2.11 · app 0.13</td><td>The Tape theme: a cassette whose reels turn while recording and whose tape winds across as the memory fills. Turning or shaking the stick no longer keeps it awake; only keys, USB, the phone and the web page do.</td></tr>
+    <tr><td class="v">fw 2.12 · app 0.14</td><td>The stick advertises a "new notes" flag, so the phone wakes and syncs only when there is something, then goes quiet. One "Synced N notes" notification, at most 3 an hour. Theme, brightness and format can be set from the app. Tape label gets a light strip in the tag's colour; recording shows REC, a breathing lamp and moving tape.</td></tr>
+    <tr><td class="v">fw 2.13 · app 0.15</td><td>Updating and Updated screens on the stick; a version marker in the firmware so a shared .bin can be loaded into the app and checked. App: Minimal look, a diagnostic log to export, credits and licences.</td></tr>
+    <tr><td class="v">fw 2.14 · app 0.16</td><td>One stick, one phone: the stick has an id and remembers its phone. A new phone asks once ("Use it with this phone?"); taking over a paired stick needs KEY1 on the stick. Settings → Phone on the stick forgets it.</td></tr>
+  </table></div>
+  <h2 class="secttl">Still open</h2>
+  <ul class="tight">
+    <li>Confirm 2.7–2.9 and 0.10–0.11 on the hardware: Opus timing, OTA end to end, charge detection.</li>
+    <li>Sleep-when-idle ("ring mode") for days of carry time.</li>
+    <li>A photo album inside the firmware. Shake thresholds for the dice still to be tried on the board.</li>
+    <li>The Web Bluetooth page does not say hello yet, so it only works with a stick that has no phone.</li>
+    <li>A downloadable llama.cpp model as a second tidy-up engine.</li>
+  </ul>
+</section>
+<footer class="foot">
+  <p><b>Firmware:</b> <a href="https://github.com/Meerdog/M5MarshyMusings">github.com/Meerdog/M5MarshyMusings</a>, forked from <a href="https://github.com/mbogatyr/M5VoiceRecorder">mbogatyr/M5VoiceRecorder</a> &nbsp;·&nbsp; <b>Android app:</b> <a href="https://github.com/Meerdog/MarshyMusings">github.com/Meerdog/MarshyMusings</a> (MIT)</p>
+  <p>This page is a browser simulation of firmware 2.14.0 and app 0.16.0. Notes, transcripts and places in it are examples. Transcription (whisper.cpp) and tidy-up (Gemini Nano) run on the phone in the real app; here they are stand-ins. Tango the cat is the author's own pixel art.</p>
+</footer>
+</div>
+
+<script>
+const SPR = {"face": "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", "lounge": "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", "sit": "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", "sleep": "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"};
+const uri = n => 'data:image/png;base64,' + SPR[n];
+document.getElementById('hdrcat').src = uri('lounge');
+document.getElementById('barcat').src = uri('face');
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  ['sim','flow','rev'].forEach(t => document.getElementById('tab-' + t).hidden = t !== b.dataset.tab);
+}));
+
+// ================= the stick =================
+const TAGS = [
+  { cat: 'Work', color: 0x0A84FF, subs: ['Project', 'Update', 'AI'], codes: ['work-proj','work-upd','work-ai'] },
+  { cat: 'Run', color: 0x30D158, subs: ['Place', 'Thought', 'Running'], codes: ['run-place','run-thought','run-run'] },
+  { cat: 'Intention', color: 0xFFD60A, subs: ['Morning', 'Midday', 'Evening'], codes: ['int-morn','int-mid','int-eve'] },
+];
+const THEMES = ['Tango', 'Plain', 'Wireframe', 'Warm', 'Pixel', 'Minimal', 'Tape'];
+const FORMATS = [{ name: 'Opus 16 kHz · small', mark: 'opus', ext: 'opus', bps: 2000 }, { name: 'WAV 8 kHz · plays anywhere', mark: 'wav 8k', ext: 'wav', bps: 4000 }, { name: 'WAV 16 kHz · big', mark: 'wav 16k', ext: 'wav', bps: 8000 }];
+const FREE = 4325376; // 4.1 MB of LittleFS
+const RED = 0xFF3B30, BLUE = 0x0A84FF, CYAN = 0x5AC8FA, GREEN = 0x30D158, AMBER = 0xFFD60A, GRAY = 0x8E8E93, DARK = 0x3A3A3C, DGRAY = 0x5A5A5A, WHITE = 0xFFFFFF, ORANGE = 0xF08C3A, PINK = 0xE59AA6;
+
+const S = { mode: 'ready', upright: false, tag: null, pickC: 0, pickS: 0, sub: false, files: [], counter: 7,
+  theme: store.get('mm.theme', 0), bright: 0, fmt: 0, recStart: 0, savedUntil: 0, saved: null, wifi: false,
+  overlay: null, sel: 0, usb: false, chargeSince: 0,
+  stickId: '3F2A', owner: null, forgetArmed: false, special: null, upd: 0, updT0: 0, claimUntil: 0, claimCb: null };
+
+function themed(rgb) {
+  const r = (rgb >> 16) & 255, g = (rgb >> 8) & 255, b = rgb & 255, grey = r === g && g === b, lum = (r * 54 + g * 183 + b * 19) >> 8;
+  switch (THEMES[S.theme]) {
+    case 'Wireframe': return grey ? rgb : WHITE;
+    case 'Pixel': { const v = grey ? lum : (lum * 3 + 255) >> 2; return ((v * 2 / 5 | 0) << 16) | (v << 8) | (v / 6 | 0); }
+    case 'Tape': if (grey) return (lum << 16) | ((lum * 236 >> 8) << 8) | (lum * 208 >> 8);
+      return ({ [BLUE]: 0x6E8A96, [GREEN]: 0x8E9B5E, [AMBER]: 0xD6A84E, [RED]: 0xB5533F, [CYAN]: 0x88A9A6, [ORANGE]: 0xC98448, [PINK]: 0xC79A8C })[rgb] ?? rgb;
+    case 'Warm': { const m = { [BLUE]: 0xFFB347, [GREEN]: 0xC9E265, [AMBER]: 0xFFE08A, [RED]: 0xFF8C69, [CYAN]: 0xFFC97A, [ORANGE]: 0xFFB07A, [PINK]: 0xFFD1DC };
+      return m[rgb] !== undefined ? m[rgb] : (lum << 16) | ((lum * 235 >> 8) << 8) | (lum * 190 >> 8); }
+    default: return rgb;
+  }
+}
+const cats = () => !['Plain', 'Wireframe', 'Minimal'].includes(THEMES[S.theme]);
+const lcd = document.getElementById('lcd'), out = lcd.getContext('2d');
+const scr = document.createElement('canvas'); scr.width = 240; scr.height = 135;
+const g = scr.getContext('2d');
+const col = (rgb, a = 1) => { const v = themed(rgb), dim = [1, .75, .5][S.bright] * a; return `rgb(${((v >> 16) & 255) * dim | 0},${((v >> 8) & 255) * dim | 0},${(v & 255) * dim | 0})`; };
+function big(s, x, y, size, rgb, align = 'left') { g.font = '700 ' + size + 'px Sora, system-ui, sans-serif'; g.fillStyle = col(rgb); g.textAlign = align; g.textBaseline = 'alphabetic'; g.fillText(s, x, y); return g.measureText(s).width; }
+function rr(x, y, w, h, r, rgb) { g.fillStyle = col(rgb); g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); }
+function txt(s, x, y, size, rgb, align = 'left', bold = false) { g.font = (bold ? '600 ' : '') + size + 'px "IBM Plex Mono", monospace'; g.fillStyle = col(rgb); g.textAlign = align; g.textBaseline = 'alphabetic'; g.fillText(s, x, y); return g.measureText(s).width; }
+function circle(x, y, r, rgb, a) { g.fillStyle = col(rgb, a); g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+function ring(x, y, r0, r1, rgb, a) { g.strokeStyle = col(rgb, a); g.lineWidth = r1 - r0; g.beginPath(); g.arc(x, y, (r0 + r1) / 2, 0, Math.PI * 2); g.stroke(); }
+const CAT = ['X.........X','XP.......PX','XXXXXXXXXXX','XXXXXXXXXXX','XX.XXXXX.XX','XXXXXXXXXXX','XXXXX.XXXXX','.XXXXXXXXX.','..XXXXXXX..'];
+function cat(x, y, s, rgb, force) { if (!cats() && !force) return; CAT.forEach((row, r) => [...row].forEach((p, i) => { if (p !== '.') { g.fillStyle = col(p === 'P' && rgb === ORANGE ? PINK : rgb); g.fillRect(x + i * s, y + r * s, s, s); } })); }
+function ears(cx, cy, r, rgb) { if (!cats()) return; g.fillStyle = col(rgb); g.strokeStyle = col(rgb); g.lineWidth = 1;
+  for (const sd of [-1, 1]) { g.beginPath(); g.moveTo(cx + sd * (r - 1), cy - r + 9); g.lineTo(cx + sd * (r - 11), cy - r + 2); g.lineTo(cx + sd * (r - 3), cy - r - 7); g.fill();
+    g.beginPath(); g.moveTo(cx + sd * (r - 3), cy + 3); g.lineTo(cx + sd * (r + 8), cy); g.moveTo(cx + sd * (r - 3), cy + 6); g.lineTo(cx + sd * (r + 8), cy + 8); g.stroke(); } }
+const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const used = () => S.files.reduce((a, f) => a + f.bytes, 0);
+const left = () => Math.max(0, Math.floor((FREE - used()) / FORMATS[S.fmt].bps));
+function tagCode() { return S.tag ? TAGS[S.tag.c].codes[S.tag.s] : 'rec'; }
+function tagLabel() { return S.tag ? TAGS[S.tag.c].cat + ' · ' + TAGS[S.tag.c].subs[S.tag.s] : 'Ready'; }
+
+function topRow(w) {
+  const pct = 82;
+  const fill = pct > 20 ? GREEN : pct > 10 ? AMBER : RED;
+  g.strokeStyle = col(GRAY); g.lineWidth = 1; g.strokeRect(6.5, 3.5, 22, 11); g.fillStyle = col(GRAY); g.fillRect(29, 6, 2, 5);
+  g.fillStyle = col(fill); g.fillRect(8, 5, 18 * pct / 100, 7);
+  let x = 34;
+  if (S.usb) {
+    const full = performance.now() - S.chargeSince > 12000, c = full ? GREEN : AMBER;
+    g.fillStyle = col(c); g.beginPath(); g.moveTo(x + 4, 2); g.lineTo(x, 9); g.lineTo(x + 4, 9); g.fill(); g.beginPath(); g.moveTo(x + 3, 7); g.lineTo(x + 7, 7); g.lineTo(x + 2, 15); g.fill();
+    x += 10 + txt(full ? 'full' : 'charging', x + 10, 13, 11, c, 'left', true) + 8;
+  } else x += txt(pct + '%', x, 13, 11, fill, 'left', true) + 8;
+  if (S.wifi) x += txt('Wi-Fi', x, 13, 11, CYAN, 'left', true) + 8;
+  else if (S.mode !== 'recording') x += txt('BT', x, 13, 11, phone.connected ? CYAN : GRAY) + 8;
+  if (S.files.length && w >= 200) txt(S.files.length + ' file' + (S.files.length === 1 ? '' : 's'), x, 13, 11, GRAY);
+}
+function key2(label) { g.fillStyle = col(CYAN); g.beginPath(); g.moveTo(176, 11); g.lineTo(182, 11); g.lineTo(179, 5); g.fill(); txt(label, 187, 13, 11, CYAN, 'left', true); }
+function key1() { g.fillStyle = col(BLUE); g.beginPath(); g.moveTo(233, 58); g.lineTo(233, 66); g.lineTo(238, 62); g.fill(); }
+
+function icon(e, cx, cy, rgb) {
+  const s = v => Math.round(v * 1.5);
+  if (e === 0) { cat(cx - 11, cy - s(19), 2, ORANGE); g.fillStyle = col(rgb); g.beginPath(); g.roundRect(cx - s(21), cy - s(8), s(42), s(26), s(5)); g.fill(); g.fillStyle = '#000'; g.fillRect(cx - s(21), cy + s(2), s(42), 2); }
+  else if (e === 1) { ring(cx, cy + s(3), s(14), s(18), rgb); g.fillStyle = col(rgb); g.fillRect(cx - s(4), cy - s(20), s(8), s(5)); cat(cx - 11, cy + s(3) - 9, 2, ORANGE); }
+  else if (e === 2) { g.strokeStyle = col(rgb); g.lineWidth = 3; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; g.beginPath(); g.moveTo(cx + s(16) * Math.cos(a), cy + s(16) * Math.sin(a)); g.lineTo(cx + s(22) * Math.cos(a), cy + s(22) * Math.sin(a)); g.stroke(); } if (cats()) cat(cx - 16, cy - 13, 3, ORANGE); else circle(cx, cy, s(10), rgb); }
+  else if (e === 3) { if (cats()) cat(cx - 16, cy - 13, 3, GRAY); else ring(cx, cy, s(12), s(16), rgb); g.strokeStyle = col(rgb); g.lineWidth = 3; g.beginPath(); g.moveTo(cx - s(13), cy - s(13)); g.lineTo(cx + s(13), cy + s(13)); g.stroke(); }
+  else { const h = [6, 12, 20, 9, 24, 14, 18, 8, 5]; g.fillStyle = col(rgb); h.forEach((v, i) => g.fillRect(cx - s(20) + i * s(5), cy - s(v) / 2 * 1.4, s(3), s(v) * 1.4)); }
+}
+
+// ---- Cat Slots (same rules as lib/Slots) ----
+const SYM = ['Tango', 'Star', 'Fish', 'Paw', 'Yarn', 'Mouse'];
+const REELS = [[0,5,2,3,4,5,1,2,3,5,4,2,5,3,1,4],[5,2,0,4,3,5,2,1,5,3,4,2,5,4,3,1],[2,5,3,0,5,4,1,3,2,5,4,5,3,2,1,4]];
+const TRIPLE = [100, 40, 16, 12, 9, 6], BET = 5;
+const slotsDefault = { bank: 100, debt: 0, spins: 0, since: 0, won: 0, bet: 0, best: 0, jackpots: 0, loans: 0, repaid: 0, interest: 0 };
+let SL = Object.assign({}, slotsDefault, store.get('mm.slots', {}));
+const slot = { act: 0, stats: false, shown: [0, 2, 4], spin: 0, t0: 0, result: [0, 0, 0], win: 0, jackpot: false, msg: '', msgUntil: 0 };
+function payout(a, b, c) { if (a === b && b === c) return TRIPLE[a] * BET; const t = (a === 0) + (b === 0) + (c === 0); if (t === 2) return 4 * BET; if (a === b || b === c || a === c) return BET; return 0; }
+function say(m) { slot.msg = m; slot.msgUntil = performance.now() + 2000; }
+function slotsAct() {
+  if (slot.stats) { slot.stats = false; return; }
+  if (slot.spin) return;
+  if (slot.act === 0) {
+    if (SL.bank < BET) { say('Broke. Take a loan?'); return; }
+    SL.bank -= BET; SL.bet += BET;
+    slot.result = [0, 1, 2].map(i => REELS[i][Math.random() * 16 | 0]);
+    slot.win = payout(...slot.result); slot.jackpot = slot.result.every(v => v === 0);
+    SL.bank += slot.win; SL.won += slot.win; SL.best = Math.max(SL.best, slot.win); SL.jackpots += slot.jackpot; SL.spins++;
+    if (SL.debt > 0) { if (++SL.since >= 10) { SL.since = 0; const i = Math.ceil(SL.debt * 5 / 100); SL.debt += i; SL.interest += i; } } else SL.since = 0;
+    slot.spin = 7; slot.t0 = performance.now(); slot.msg = '';
+  } else if (slot.act === 1) {
+    if (SL.debt + 60 > 500) { say('The shark says no'); return; }
+    SL.bank += 50; SL.debt += 60; SL.loans++; say('+50, you owe ' + SL.debt);
+  } else if (slot.act === 2) {
+    if (!SL.debt || !SL.bank) { say(SL.debt ? 'Nothing to pay with' : 'You owe nothing'); return; }
+    const p = Math.min(50, SL.bank, SL.debt); SL.bank -= p; SL.debt -= p; SL.repaid += p; if (!SL.debt) SL.since = 0;
+    say(SL.debt ? 'Paid. Owe ' + SL.debt : 'Paid off!');
+  } else if (slot.act === 3) slot.stats = true;
+  else S.overlay = null;
+  store.set('mm.slots', SL);
+}
+function sym(k, cx, cy, sc = 1) {
+  g.save(); g.translate(cx, cy); g.scale(sc, sc);
+  if (k === 0) { if (cats()) cat(-11, -9, 2, ORANGE); else { circle(0, 0, 10, ORANGE); g.beginPath(); g.moveTo(-10, -4); g.lineTo(-9, -15); g.lineTo(-2, -9); g.moveTo(10, -4); g.lineTo(9, -15); g.lineTo(2, -9); g.fill(); } }
+  else if (k === 1) { g.fillStyle = col(AMBER); g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 5.5 : 13; g.lineTo(r * Math.cos(a), r * Math.sin(a)); } g.fill(); }
+  else if (k === 2) { g.fillStyle = col(CYAN); g.beginPath(); g.ellipse(-3, 0, 11, 6.5, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.moveTo(5, 0); g.lineTo(14, -7); g.lineTo(14, 7); g.fill(); circle(-9, -1.5, 1.4, 0); }
+  else if (k === 3) { circle(0, 4, 6.5, PINK); [[-8, -3], [-3, -8.5], [3, -8.5], [8, -3]].forEach(([dx, dy]) => circle(dx, dy, 3.2, PINK)); }
+  else if (k === 4) { circle(0, 0, 11, GREEN); g.strokeStyle = '#000'; g.lineWidth = 1.4; g.beginPath(); g.arc(0, 0, 7, 3.4, 6.1); g.stroke(); g.beginPath(); g.arc(0, 0, 10, .4, 2.7); g.stroke(); g.beginPath(); g.arc(0, 0, 4, 0, 2); g.stroke(); }
+  else { g.fillStyle = col(GRAY); g.beginPath(); g.ellipse(1, 2, 10, 6, 0, 0, Math.PI * 2); g.fill(); circle(-7, -4, 4, GRAY); g.strokeStyle = col(GRAY); g.lineWidth = 1.2; g.beginPath(); g.moveTo(11, 2); g.quadraticCurveTo(16, -2, 15, -7); g.stroke(); }
+  g.restore();
+}
+function coin(x, y, r) { circle(x, y, r, AMBER); ring(x, y, r - 3, r - 2, 0x8A6A00); }
+function winningSlots() { const [a, b, c] = slot.result; if (a === b && b === c) return [0, 1, 2]; const t = [0, 1, 2].filter(i => slot.result[i] === 0); if (t.length === 2) return t; if (a === b) return [0, 1]; if (b === c) return [1, 2]; if (a === c) return [0, 2]; return []; }
+function drawSlots(now) {
+  if (slot.spin) { const t = now - slot.t0; for (let i = 0; i < 3; i++) if (slot.spin & (1 << i)) { if (t >= 500 + 300 * i) { slot.spin &= ~(1 << i); slot.shown[i] = slot.result[i]; if (!slot.spin && slot.win > 10) slot.bigUntil = now + (slot.jackpot ? 6000 : 3500); } else slot.shown[i] = Math.random() * 6 | 0; } }
+  if (now < (slot.bigUntil || 0)) return drawBigWin(now);
+  key2('Next');
+  if (slot.stats) {
+    txt('Cat Slots · all time', 10, 32, 12, WHITE, 'left', true);
+    txt(`${SL.spins} spins · bet ${SL.bet} · won ${SL.won}`, 10, 54, 9.5, GRAY);
+    txt(`best win ${SL.best} · jackpots ${SL.jackpots}`, 10, 70, 9.5, GRAY);
+    txt(`loans ${SL.loans} · repaid ${SL.repaid} · interest ${SL.interest}`, 10, 86, 9.5, GRAY);
+    const net = SL.bank - SL.debt; txt(`bank ${SL.bank} · owe ${SL.debt} · net ${net >= 0 ? '+' : ''}${net}`, 10, 106, 11, net >= 0 ? GREEN : AMBER, 'left', true);
+    txt('KEY1 back to the reels', 10, 127, 9.5, DGRAY); key1(); return;
+  }
+  const lit = !slot.spin && slot.win > 0 && SL.spins ? winningSlots() : [];
+  for (let i = 0; i < 3; i++) { const x = 6 + i * 78, y = 18;
+    rr(x, y, 72, 64, 7, slot.spin & (1 << i) ? 0x1C1C1E : DARK);
+    if (lit.includes(i)) { g.strokeStyle = col(GREEN); g.lineWidth = 2; g.beginPath(); g.roundRect(x + 1, y + 1, 70, 62, 7); g.stroke(); }
+    g.save(); g.beginPath(); g.rect(x + 3, y + 3, 66, 58); g.clip();
+    sym(slot.shown[i], x + 36, y + 32 + (slot.spin & (1 << i) ? Math.random() * 16 - 8 : 0), 1.9); g.restore(); }
+  if (now < slot.msgUntil) txt(slot.msg, 8, 110, 10, AMBER);
+  else if (slot.spin) { for (let i = 0; i < 3; i++) { g.fillStyle = col(GRAY); g.fillRect(12 + i * 7, 107, 4, 4); } }
+  else if (slot.win > 0 && SL.spins) big('+' + slot.win, 8, 116, 26, slot.jackpot ? ORANGE : GREEN);
+  const bw = big(String(SL.bank), 232, 116, 26, SL.bank >= BET ? WHITE : AMBER, 'right');
+  coin(232 - bw - 11, 106, 7);
+  txt('KEY1: ' + ['Spin (5)', 'Loan 50 (owe 60)', 'Repay 50', 'Stats', 'Quit'][slot.act], 8, 130, 11, WHITE, 'left', true);
+  if (SL.debt) txt('owe ' + SL.debt, 232, 130, 10, AMBER, 'right', true);
+  key1();
+}
+function drawBigWin(now) {
+  const t = now - slot.t0, v = slot.win;
+  g.fillStyle = col(0x2A1A0E); g.fillRect(0, 0, 240, 135);
+  g.save(); g.translate(120, 74); g.rotate(t / 4000);
+  for (let i = 0; i < 12; i++) { g.fillStyle = col(i % 2 ? 0x3E2814 : 0x2A1A0E); g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 200, i * Math.PI / 6, (i + 1) * Math.PI / 6); g.fill(); }
+  g.restore();
+  for (let i = 0; i < 14; i++) { const x = (i * 53 + 17) % 236, y = ((t / 7 + i * 41) % 170) - 20; g.fillStyle = col(AMBER); g.beginPath(); g.ellipse(x, y, 6, 4.5, i, 0, Math.PI * 2); g.fill(); }
+  const bob = Math.abs(Math.sin(t / 180)) * 8;
+  cat(4, 108 - bob, 3, ORANGE); cat(203, 108 - bob, 3, ORANGE);
+  big(slot.jackpot ? 'JACKPOT!' : v >= 200 ? 'HUGE WIN' : v >= 60 ? 'BIG WIN' : 'NICE WIN', 120, 30, 18, WHITE, 'center');
+  big('+' + v, 120, 92, 52, slot.jackpot ? ORANGE : GREEN, 'center');
+  slot.result.forEach((k, i) => { circle(96 + i * 24, 120, 10, DARK); sym(k, 96 + i * 24, 120, .55); });
+}
+function drawPayTable() {
+  big('PAYS', 8, 38, 22, WHITE); txt('bet 5', 128, 36, 9.5, GRAY, 'right');
+  const rows = [[0, 500], [1, 200], [2, 80], [3, 60], [4, 45], [5, 30]];
+  const hit = SL.spins && slot.win ? (slot.result[0] === slot.result[1] && slot.result[1] === slot.result[2] ? slot.result[0] : slot.win === 20 ? 6 : slot.win === 5 ? 7 : -1) : -1;
+  rows.forEach(([k, v], i) => { const y = 58 + i * 21; if (hit === k) rr(3, y - 10, 129, 20, 6, 0x0E3A1A);
+    for (let j = 0; j < 3; j++) sym(k, 20 + j * 19, y, .6); big(String(v), 128, y + 6, 15, k === 0 ? ORANGE : WHITE, 'right'); });
+  let y = 58 + 6 * 21; if (hit === 6) rr(3, y - 10, 129, 20, 6, 0x0E3A1A); sym(0, 20, y, .6); sym(0, 39, y, .6); txt('+ any', 54, y + 3, 9, GRAY); big('20', 128, y + 6, 15, WHITE, 'right');
+  y += 21; if (hit === 7) rr(3, y - 10, 129, 20, 6, 0x0E3A1A); txt('any pair', 8, y + 4, 11, GRAY, 'left', true); big('5', 128, y + 6, 15, WHITE, 'right');
+  txt('turn back to play', 67, 235, 8.5, DGRAY, 'center');
+}
+
+// ---- Dice (same rules as lib/Dice) ----
+const DI = { n: store.get('mm.dice', 3), faces: [], t0: 0, rolling: false, final: [] };
+function describe(f) {
+  const n = [0, 0, 0, 0, 0, 0, 0]; f.forEach(v => n[v]++);
+  let best = 0, face = 0, pairs = 0; for (let v = 1; v <= 6; v++) { if (n[v] >= best && n[v] > 0) { best = n[v]; face = v; } if (n[v] >= 2) pairs++; }
+  const all = (1 << f.length) - 1;
+  if (f.length >= 5) { const present = [1, 2, 3, 4, 5, 6].filter(v => n[v]); if (present.every(v => n[v] === 1) && present[present.length - 1] - present[0] + 1 === f.length) return { label: 'Straight!', mask: all }; }
+  if (best < 2) return { label: '', mask: 0 };
+  let mask = 0; f.forEach((v, i) => { if (v === face) mask |= 1 << i; });
+  if (best === f.length) return { label: f.length === 2 ? (face === 6 ? 'Boxcars!' : face === 1 ? 'Snake eyes!' : 'Doubles!') : f.length === 3 ? `Triple ${face}s!` : `All ${face}s!`, mask };
+  if (best === 2 && pairs >= 2) { mask = 0; f.forEach((v, i) => { if (n[v] >= 2) mask |= 1 << i; }); return { label: pairs >= 3 ? 'Three pairs' : 'Two pairs', mask }; }
+  return { label: best === 2 ? `Pair of ${face}s` : `${['', '', 'Two', 'Three', 'Four', 'Five', 'Six'][best]} ${face}s`, mask };
+}
+const PIPS = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
+function die(x, y, sz, v, lit) {
+  if (lit) rr(x - 3, y - 3, sz + 6, sz + 6, sz * .24, AMBER);
+  rr(x, y, sz, sz, sz * .2, 0xF2F2F2);
+  if (!v) { txt('?', x + sz / 2, y + sz * .66, sz * .5, GRAY, 'center', true); return; }
+  const r = sz * (v === 1 ? .13 : .09), d = sz * .27;
+  PIPS[v].forEach(([dx, dy]) => circle(x + sz / 2 + dx * d, y + sz / 2 + dy * d, r, v === 1 ? RED : 0x111111));
+}
+function drawDice(now) {
+  if (DI.rolling) { if (now - DI.t0 > 700) { DI.rolling = false; DI.faces = DI.final; } else if ((now / 60 | 0) % 2) DI.faces = Array.from({ length: DI.n }, () => 1 + Math.random() * 6 | 0); }
+  key2(DI.n + ' dice');
+  const f = DI.faces.length === DI.n ? DI.faces : Array(DI.n).fill(0), d = DI.rolling || !DI.faces.length ? { label: '', mask: 0 } : describe(f);
+  if (DI.n <= 3) { const sz = 64, gap = 14, w = DI.n * sz + (DI.n - 1) * gap; f.forEach((v, i) => die(120 - w / 2 + i * (sz + gap), 22, sz, v, d.mask & (1 << i))); }
+  else { const sz = 38, gap = 8; const top = f.slice(0, 3), bot = f.slice(3);
+    [top, bot].forEach((row, r) => { const w = row.length * sz + (row.length - 1) * gap; row.forEach((v, i) => die(120 - w / 2 + i * (sz + gap), 20 + r * (sz + 8), sz, v, d.mask & (1 << (i + r * 3)))); }); }
+  if (DI.faces.length && !DI.rolling) { txt('total', 8, 129, 9, GRAY); big(String(f.reduce((a, b) => a + b, 0)), 40, 131, 24, WHITE); if (d.label) big(d.label, 232, 130, 18, AMBER, 'right'); }
+  else txt(DI.rolling ? 'rolling…' : 'KEY1 rolls · KEY2 more dice', 8, 129, 10, GRAY);
+  key1();
+}
+
+// ---- The Tape theme: a cassette filling the screen ----
+function drawTape(mode, now) {
+  const SHELL = 0x2E2722, EDGE = 0x463C33, PAPER = 0xE3D4B2, INK = 0x3A2A1C, FAINT = 0x8C7A62, WIN = 0x17120E, TAPE = 0x4E3020, HUB = 0xD9CBA9, LAMP = 0xB5533F;
+  const rec = mode === 'rec', breath = .5 + .5 * Math.sin(now / 320);
+  rr(4, 17, 232, 116, 9, SHELL);
+  g.lineWidth = 1.5; g.strokeStyle = rec ? col(LAMP, .35 + .65 * breath) : col(EDGE); g.beginPath(); g.roundRect(4.5, 17.5, 231, 115, 9); g.stroke();
+  if (rec) { g.strokeStyle = col(LAMP, .25 * breath); g.beginPath(); g.roundRect(6.5, 19.5, 227, 111, 8); g.stroke(); }
+  [[10, 23], [230, 23], [10, 127], [230, 127]].forEach(([x, y]) => circle(x, y, 2, FAINT));
+  rr(14, 24, 206, 76, 5, PAPER);
+  if (S.tag) { g.fillStyle = col([0xA9CBEA, 0xB9DDA0, 0xF2DC97][S.tag.c]); g.fillRect(14, 28, 206, 10); g.fillStyle = col(FAINT, .63); g.fillRect(14, 38, 206, 1); }
+  else { g.fillStyle = col(FAINT, .78); g.fillRect(14, 32, 206, 1); }
+  cat(20, 42, 1, INK, true); big(S.tag ? TAGS[S.tag.c].cat + ' - ' + TAGS[S.tag.c].subs[S.tag.s] : 'Side A', 36, 52, 12, INK);
+  const el = rec ? Math.floor((now - S.recStart) / 1000) : 0;
+  if (rec) { circle(206, 47, 7, LAMP, (40 + 50 * breath) / 256); circle(206, 47, 5, LAMP, (150 + 106 * breath) / 256); txt(fmt(el), 194, 52, 9, INK, 'right'); }
+  else { g.strokeStyle = col(FAINT); g.lineWidth = 1; g.beginPath(); g.arc(206, 47, 4, 0, Math.PI * 2); g.stroke(); if (mode === 'saved') txt(fmt(S.saved.seconds), 194, 52, 9, INK, 'right'); }
+  rr(36, 56, 162, 40, 8, WIN);
+  const u = Math.min(1, (used() + (rec ? el * FORMATS[S.fmt].bps : 0)) / FREE), rMin = 11, rMax = 19, full = rMax * rMax - rMin * rMin;
+  const L = Math.round(Math.sqrt(rMin * rMin + full * (1 - u))), R = Math.round(Math.sqrt(rMin * rMin + full * u)), phase = Math.floor(now / 50) % 28, ang = rec ? phase * .2618 : 0;
+  const ax = 78 - L / 2, ay = 76 + L - 1, bx = 156 + R / 2, by = 76 + R - 1;
+  g.strokeStyle = col(TAPE); g.lineWidth = 1; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+  [[78, L], [156, R]].forEach(([x, r]) => { circle(x, 76, r, TAPE); ring(x, 76, r - 2, r - 1, 0x65412C); circle(x, 76, 8, HUB);
+    for (let k = 0; k < 6; k++) { const a = ang + k * Math.PI / 3; g.strokeStyle = col(INK); g.lineWidth = 2; g.beginPath(); g.moveTo(x + 3 * Math.cos(a), 76 + 3 * Math.sin(a)); g.lineTo(x + 6.5 * Math.cos(a), 76 + 6.5 * Math.sin(a)); g.stroke(); }
+    circle(x, 76, 2, INK); });
+  if (rec) {
+    for (let k = 0; k < 3; k++) { const f = ((phase + k * 28 / 3) % 28) / 28, px = ax + (bx - ax) * f, py = ay + (by - ay) * f; if (px > 78 + L && px < 156 - R) { g.fillStyle = col(HUB); g.fillRect(px, py - 1, 3, 2); } }
+    g.font = '600 9.5px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = col(LAMP, (170 + 86 * breath) / 256); g.fillText('REC', 117.5, 75);
+  }
+  g.fillStyle = col(0x3A322B); g.beginPath(); g.moveTo(64, 103); g.lineTo(176, 103); g.lineTo(186, 133); g.lineTo(54, 133); g.fill();
+  circle(86, 119, 5, WIN); circle(150, 119, 5, WIN); rr(109, 113, 18, 12, 2, WIN);
+  const lsec = left(), lc = lsec < 120 ? AMBER : FAINT;
+  txt(Math.floor(lsec / 60) + 'm', 13, 112, 8.5, lc); txt('left', 13, 122, 8.5, lc);
+  key1();
+}
+
+function drawSpecial(now) {
+  if (S.special === 'blank') return;
+  if (S.special !== 'restart') topRow(240);
+  if (S.special === 'updating') {
+    S.upd = Math.min(100, (now - S.updT0) / 60);
+    txt('v2.14.0 → v2.15.0', 232, 13, 9, DGRAY, 'right');
+    big('Updating firmware', 120, 44, 13, WHITE, 'center');
+    big(Math.floor(S.upd) + '%', 120, 82, 26, WHITE, 'center');
+    rr(30, 92, 180, 6, 3, 0x2C2C2E); rr(30, 92, 180 * S.upd / 100, 6, 3, BLUE);
+    txt("Keep it near the phone, don't power off", 120, 124, 9, GRAY, 'center');
+    if (S.upd >= 100) { S.special = 'restart'; setTimeout(() => { S.special = 'blank'; setTimeout(() => { S.special = 'updated'; phone.fw = '2.15.0'; render(); setTimeout(() => { if (S.special === 'updated') S.special = null; }, 5000); }, 800); }, 1400); log('sync', 'Stick updated to 2.15.0; it is restarting'); render(); }
+  } else if (S.special === 'restart') {
+    big('Firmware installed', 120, 64, 13, GREEN, 'center'); big('Restarting...', 120, 92, 16, WHITE, 'center');
+  } else if (S.special === 'updated') {
+    g.strokeStyle = col(GREEN); g.lineWidth = 3.5; g.beginPath(); g.moveTo(104, 50); g.lineTo(115, 61); g.lineTo(138, 36); g.stroke();
+    big('Updated to v2.15.0', 120, 92, 15, WHITE, 'center'); txt('recordings and settings kept', 120, 114, 9.5, GRAY, 'center');
+  } else if (S.special === 'claim') {
+    const left = Math.max(0, Math.ceil((S.claimUntil - now) / 1000)); if (!left) { answerClaim(false); return; }
+    circle(39, 70, 20, 0x1C3A4A); big('?', 39, 79, 22, CYAN, 'center');
+    txt('A new phone wants', 72, 46, 12, WHITE, 'left', true); txt('to connect', 72, 63, 12, WHITE, 'left', true);
+    txt('It replaces the paired one.', 72, 80, 9.5, GRAY); txt('KEY1 allow', 72, 106, 12, GREEN, 'left', true); txt('KEY2 no', 72, 124, 12, GRAY, 'left', true);
+    txt(left + ' s', 232, 124, 9, DGRAY, 'right'); key1();
+  }
+}
+function answerClaim(ok) { const cb = S.claimCb; S.special = null; S.claimCb = null; if (cb) cb(ok); }
+
+function draw() {
+  paint();
+  out.setTransform(1, 0, 0, 1, 0, 0); out.fillStyle = '#000'; out.fillRect(0, 0, 240, 135);
+  if (scr.width === 135) { out.translate(0, 135); out.rotate(-Math.PI / 2); }
+  out.drawImage(scr, 0, 0);
+}
+function paint() {
+  const now = performance.now();
+  const portrait = S.upright && S.overlay !== 'dice';
+  const W = portrait ? 135 : 240, H = portrait ? 240 : 135;
+  if (scr.width !== W) { scr.width = W; scr.height = H; }
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+  if (S.special) { if (scr.width !== 240) { scr.width = 240; scr.height = 135; g.fillStyle = '#000'; g.fillRect(0, 0, 240, 135); } return drawSpecial(now); }
+  if (S.overlay === 'slots' && !portrait && now < (slot.bigUntil || 0)) { drawSlots(now); return; }
+  topRow(W);
+  if (portrait && S.overlay === 'slots') { drawPayTable(); return; }
+  const minimal = THEMES[S.theme] === 'Minimal';
+
+  if (portrait && S.mode === 'recording') {
+    const el = Math.floor((now - S.recStart) / 1000), c = S.tag ? TAGS[S.tag.c].color : RED;
+    txt(S.tag ? TAGS[S.tag.c].cat : 'Recording', 67, 40, 12, c, 'center', true);
+    if (S.tag) txt(TAGS[S.tag.c].subs[S.tag.s], 67, 55, 9.5, c, 'center');
+    txt(FORMATS[S.fmt].mark, 67, 68, 9.5, GRAY, 'center');
+    txt(fmt(el), 67, 108, 26, WHITE, 'center', true); txt(fmt(left()) + ' left', 67, 124, 9.5, GRAY, 'center');
+    for (let i = 0; i < 54; i++) { const h = 2 + Math.random() * 26; g.fillStyle = col(RED, .4 + .6 * i / 54); g.fillRect(14 + i * 2, 148 - h / 2, 1, h); }
+    const p = (now % 1400) / 1400, e = 1 - (1 - p) ** 2; ring(67, 190, 15 * (.6 + e) - 2, 15 * (.6 + e), c, 1 - e);
+    g.fillStyle = col(WHITE); g.fillRect(61, 184, 12, 12);
+    g.fillStyle = col(BLUE); g.beginPath(); g.moveTo(6, 224); g.lineTo(16, 224); g.lineTo(11, 232); g.fill(); txt('Stop', 22, 232, 15, BLUE, 'left', true);
+    return;
+  }
+  if (portrait) { // picker
+    const e = S.pickC, rgb = e < 3 ? TAGS[e].color : e === 3 ? GRAY : (S.fmt === 0 ? GREEN : AMBER);
+    if (!S.sub) {
+      circle(67, 72, 52, DARK); icon(e, 67, 72, rgb);
+      txt(e < 3 ? TAGS[e].cat : e === 3 ? 'No tag' : 'Format', 67, 152, 16, WHITE, 'center', true);
+      if (e === 4) txt(FORMATS[S.fmt].name, 67, 170, 9, S.fmt === 0 ? GREEN : AMBER, 'center');
+      else if (e < 3) { const n = S.files.filter(f => f.code.startsWith(TAGS[e].codes[0].split('-')[0])).length; if (n) { circle(107, 36, 12, WHITE); txt(String(n), 107, 41, 11, 0, 'center', true); } }
+      for (let i = 0; i < 5; i++) circle(67 - 28 + i * 14, e === 4 ? 184 : 168, i === e ? 4 : 3, i === e ? rgb : DARK);
+      if (e !== 4) txt(S.tag ? TAGS[S.tag.c].cat + ' ' + TAGS[S.tag.c].subs[S.tag.s] : 'no tag armed', 67, 190, 9.5, S.tag ? TAGS[S.tag.c].color : GRAY, 'center');
+    } else {
+      txt(TAGS[e].cat, 67, 40, 12, TAGS[e].color, 'center', true);
+      TAGS[e].subs.forEach((s, i) => txt((i === S.pickS ? '› ' : '') + s, 67, 90 + i * 34, i === S.pickS ? 18 : 14, i === S.pickS ? WHITE : GRAY, 'center', i === S.pickS));
+    }
+    g.fillStyle = col(BLUE); g.beginPath(); g.moveTo(6, 224); g.lineTo(16, 224); g.lineTo(11, 232); g.fill();
+    txt(S.sub ? 'Choose' : e < 3 ? 'Open' : e === 3 ? 'Clear' : 'Change', 22, 232, 15, BLUE, 'left', true);
+    g.fillStyle = col(CYAN); g.beginPath(); g.moveTo(125, 141); g.lineTo(125, 151); g.lineTo(131, 146); g.fill();
+    return;
+  }
+  if (S.overlay === 'slots') return drawSlots(now);
+  if (S.overlay === 'dice') return drawDice(now);
+  if (S.overlay === 'settings') {
+    key2('Next'); key1();
+    const phoneLine = !S.owner ? 'Phone  none yet' : S.forgetArmed ? 'Forget phone? KEY1 again' : 'Phone  paired';
+    const rows = ['Theme  ' + THEMES[S.theme], 'Screen  ' + ['Bright', 'Medium', 'Low'][S.bright], 'Cat Slots', 'Dice', phoneLine, 'Web mode (Wi-Fi page)', 'Back'];
+    rows.forEach((r, i) => { const y = 30 + i * 14, sel = i === S.sel; if (sel) { g.fillStyle = col(BLUE); g.beginPath(); g.moveTo(10, y - 8); g.lineTo(10, y - 2); g.lineTo(15, y - 5); g.fill(); } txt(r, 22, y, 10.5, sel ? (i === 4 && S.forgetArmed ? AMBER : WHITE) : GRAY, 'left', sel); });
+    txt(`v${phone.fw}  id ${S.stickId}  82%` + (S.usb ? ' charging' : ''), 10, 131, 9, DGRAY);
+    return;
+  }
+  if (S.overlay === 'files') {
+    key2('Back');
+    txt('On the stick', 10, 32, 12, WHITE, 'left', true); txt((Math.max(0, FREE - used()) / 1048576).toFixed(1) + ' MB free', 118, 32, 9.5, GRAY);
+    if (!S.files.length) txt('Nothing yet. Empty, all clear.', 10, 70, 9.5, GREEN);
+    S.files.slice(0, 6).forEach((f, i) => { const y = 50 + i * 13; circle(13, y - 4, 3, f.color); txt(f.name, 22, y, 9.5, WHITE); txt(fmt(f.seconds), 228, y, 9.5, GRAY, 'right'); });
+    let x = 10; [0, 1, 2, 3].forEach(c => { const n = S.files.filter(f => c < 3 ? f.code.startsWith(TAGS[c].codes[0].split('-')[0]) : f.code === 'rec').length, rgb = c < 3 ? TAGS[c].color : GRAY; circle(x + 3, 126, 3, rgb); x += 9 + txt(String(n), x + 9, 130, 9.5, rgb, 'left', true) + 12; });
+    return;
+  }
+  if (S.wifi) { key2('Exit'); txt('Web mode', 10, 38, 12, WHITE, 'left', true); txt('waiting', 232, 38, 9.5, GRAY, 'right'); txt('Wi-Fi', 10, 72, 9.5, GRAY); txt('VMM5', 44, 72, 22, WHITE, 'left', true); txt('192.168.4.1', 10, 108, 22, CYAN, 'left', true); txt(S.files.length + ' recordings', 10, 128, 9.5, GRAY); return; }
+
+  const tape = THEMES[S.theme] === 'Tape';
+  if (S.mode === 'recording') {
+    if (tape) return drawTape('rec', now);
+    const el = Math.floor((now - S.recStart) / 1000), c = S.tag ? TAGS[S.tag.c].color : RED;
+    const p = (now % 1400) / 1400, e = 1 - (1 - p) ** 2;
+    if (minimal) { ring(120, 64, 18 * (.6 + e) - 2, 18 * (.6 + e), c, 1 - e); g.fillStyle = col(WHITE); g.fillRect(111, 55, 18, 18); txt(fmt(el), 120, 118, 9.5, GRAY, 'center'); key1(); return; }
+    if (S.tag) txt(tagLabel(), 10, 32, 12, c, 'left', true);
+    txt(FORMATS[S.fmt].mark, 164, 32, 9.5, GRAY, 'right');
+    txt(fmt(el), 8, 66, 28, WHITE, 'left', true); txt(fmt(left()) + ' left', 104, 64, 9.5, GRAY);
+    for (let i = 0; i < 54; i++) { const h = 2 + Math.random() * 30; g.fillStyle = col(RED, .35 + .65 * i / 54); g.fillRect(8 + i * 3, 92 - h / 2, 2, h); }
+    ring(196, 62, 15 * (.6 + e) - 2, 15 * (.6 + e), c, 1 - e); if (S.tag) ring(196, 62, 9, 11, c);
+    g.fillStyle = col(WHITE); g.fillRect(190, 56, 12, 12); txt('Stop', 196, 96, 12, WHITE, 'center', true); key1();
+    txt('mic', 200, 129, 9.5, GRAY); g.fillStyle = col(GRAY); g.beginPath(); g.moveTo(226, 121); g.lineTo(226, 129); g.lineTo(234, 125); g.fill();
+    return;
+  }
+  if (S.mode === 'saved' && now < S.savedUntil) {
+    const f = S.saved;
+    if (tape) return drawTape('saved', now);
+    if (minimal) { g.strokeStyle = col(GREEN); g.lineWidth = 3; g.beginPath(); g.moveTo(106, 62); g.lineTo(116, 72); g.lineTo(136, 50); g.stroke(); txt(fmt(f.seconds), 120, 108, 13, WHITE, 'center', true); return; }
+    txt('✓ Saved', 120, 34, 12, GREEN, 'center', true); txt(f.name.toUpperCase(), 120, 50, 9.5, f.color, 'center');
+    txt(fmt(f.seconds), 120, 88, 26, WHITE, 'center', true); txt((f.bytes / 1e6).toFixed(2) + ' MB · ' + S.files.length + ' on the stick', 120, 108, 9.5, GRAY, 'center');
+    cat(222, 121, 1, ORANGE); return;
+  }
+  S.mode = 'ready';
+  const full = left() < 5, empty = !S.files.length;
+  if (tape) { key2('Files'); return drawTape('ready', now); }
+  if (minimal) {
+    key2('Files');
+    if (full) { ring(120, 70, 22, 26, AMBER); circle(120, 70, 18, DARK); txt('full', 120, 118, 9.5, AMBER, 'center'); return; }
+    if (S.tag) ring(120, 70, 22, 26, TAGS[S.tag.c].color); circle(120, 70, 18, RED); key1(); return;
+  }
+  key2('Files');
+  let x = 10;
+  if (S.tag) { circle(x + 4, 31, 4, TAGS[S.tag.c].color); x += 12 + txt(tagLabel(), x + 12, 35, 9.5, WHITE); } else x += txt('Ready', x, 35, 9.5, GRAY);
+  txt(' · ' + (empty ? 'empty, all clear' : S.files.length + ' recording' + (S.files.length === 1 ? '' : 's')), x, 35, 9.5, empty ? GREEN : GRAY);
+  const tw = txt(fmt(left()), 8, 72, 28, WHITE, 'left', true);
+  txt('min', 8 + tw + 6, 60, 9.5, GRAY); txt(empty ? 'max' : 'left', 8 + tw + 6, 71, 9.5, empty ? GREEN : GRAY);
+  g.fillStyle = col(0x2C2C2E); g.fillRect(10, 94, 140, 5); g.fillStyle = col(GRAY); g.fillRect(10, 94, 140 * used() / FREE, 5);
+  if (S.tag) ring(196, 62, 19, 22, TAGS[S.tag.c].color);
+  ears(196, 62, 16, RED);
+  if (THEMES[S.theme] === 'Wireframe') ring(196, 62, 14, 16, RED); else circle(196, 62, 16, RED);
+  if (S.fmt) txt(S.fmt === 2 ? '16k' : 'wav', 196, 66, 9.5, THEMES[S.theme] === 'Wireframe' ? WHITE : 0x7A0000, 'center', true);
+  txt('Record', 196, 96, 12, WHITE, 'center', true); key1();
+  txt('mic', 200, 129, 9.5, GRAY); g.fillStyle = col(GRAY); g.beginPath(); g.moveTo(226, 121); g.lineTo(226, 129); g.lineTo(234, 125); g.fill();
+}
+
+function stat() { document.getElementById('stat').textContent = `tag ${tagCode()} · format ${FORMATS[S.fmt].mark} · theme ${THEMES[S.theme]} · ${S.files.length} on stick · Cat Slots bank ${SL.bank}${SL.debt ? ', owe ' + SL.debt : ''} · ${DI.n} dice`; }
+setInterval(draw, 80); setInterval(stat, 500);
+
+function stopRec() {
+  const seconds = Math.max(1, Math.round((performance.now() - S.recStart) / 1000));
+  const code = tagCode(), name = `${code}_${String(S.counter++).padStart(4, '0')}.${FORMATS[S.fmt].ext}`;
+  const f = { name, code, seconds, bytes: seconds * FORMATS[S.fmt].bps + 200, number: S.counter - 1, color: S.tag ? TAGS[S.tag.c].color : GRAY };
+  S.files.unshift(f); S.saved = f; S.mode = 'saved'; S.savedUntil = performance.now() + 2500;
+  // Firmware 2.12+: the stick advertises a "new notes" flag; the paired phone's radio wakes the app for it.
+  if (phone.paired && S.owner === phone.id) setTimeout(() => {
+    if (S.mode !== 'recording' && !S.wifi && S.files.length && !phone.connected) { log('sync', `The stick (${S.stickId}) advertised new notes; the phone's radio woke the app`); syncNow(true); }
+  }, 3500);
+}
+function key1press() {
+  if (S.special === 'claim') return answerClaim(true);
+  if (S.special && S.special !== 'updated') return;
+  if (S.special === 'updated') S.special = null;
+  if (S.upright && !S.overlay) {
+    if (S.mode === 'recording') { stopRec(); return; }
+    if (S.pickC === 4) { S.fmt = (S.fmt + 1) % 3; return; }
+    if (S.pickC === 3) { S.tag = null; return; }
+    if (!S.sub) { S.sub = true; S.pickS = S.tag && S.tag.c === S.pickC ? S.tag.s : 0; } else { S.tag = { c: S.pickC, s: S.pickS }; S.sub = false; }
+    return;
+  }
+  if (S.overlay === 'slots') { if (performance.now() < (slot.bigUntil || 0)) { slot.bigUntil = 0; return; } if (S.upright) return; return slotsAct(); }
+  if (S.overlay === 'dice') { if (!DI.rolling) { DI.rolling = true; DI.t0 = performance.now(); DI.final = Array.from({ length: DI.n }, () => 1 + Math.random() * 6 | 0); } return; }
+  if (S.overlay === 'settings') {
+    if (S.sel === 0) { S.theme = (S.theme + 1) % THEMES.length; store.set('mm.theme', S.theme); }
+    else if (S.sel === 1) S.bright = (S.bright + 1) % 3;
+    else if (S.sel === 2) { S.overlay = 'slots'; slot.act = 0; slot.stats = false; }
+    else if (S.sel === 3) { S.overlay = 'dice'; DI.faces = []; }
+    else if (S.sel === 4) { if (!S.owner) return; if (!S.forgetArmed) { S.forgetArmed = true; return; } S.owner = null; S.forgetArmed = false; phone.connected = false; log('sync', 'The stick forgot this phone (Settings → Phone on the stick)'); render(); }
+    else if (S.sel === 5) { S.overlay = null; S.wifi = true; }
+    else S.overlay = null;
+    return;
+  }
+  if (S.overlay === 'files') { S.overlay = null; return; }
+  if (S.wifi) return;
+  if (S.mode === 'recording') stopRec();
+  else if (S.mode === 'ready' && left() >= 5) { S.mode = 'recording'; S.recStart = performance.now(); phone.connected = false; }
+  else if (S.mode === 'saved') S.mode = 'ready';
+}
+document.getElementById('k1').addEventListener('click', key1press);
+document.getElementById('k1b').addEventListener('click', key1press);
+function key2tap() {
+  if (S.special === 'claim') return answerClaim(false);
+  if (S.special && S.special !== 'updated') return;
+  if (S.special === 'updated') { S.special = null; return; }
+  if (S.overlay === 'slots') { if (performance.now() < (slot.bigUntil || 0)) { slot.bigUntil = 0; return; } if (S.upright) return; if (slot.stats) slot.stats = false; else slot.act = (slot.act + 1) % 5; return; }
+  if (S.overlay === 'dice') { if (!DI.rolling) { DI.n = DI.n % 6 + 1; DI.faces = []; store.set('mm.dice', DI.n); } return; }
+  if (S.upright) { if (S.mode === 'recording') return; if (!S.sub) S.pickC = (S.pickC + 1) % 5; else S.pickS = (S.pickS + 1) % 3; return; }
+  if (S.overlay === 'settings') { S.sel = (S.sel + 1) % 7; S.forgetArmed = false; return; }
+  if (S.overlay === 'files') { S.overlay = null; return; }
+  if (S.wifi) { S.wifi = false; return; }
+  if (S.mode === 'ready') S.overlay = 'files';
+}
+document.getElementById('k2').addEventListener('click', key2tap);
+document.getElementById('k2b').addEventListener('click', key2tap);
+document.getElementById('k2h').addEventListener('click', () => {
+  if (S.overlay === 'slots') { S.overlay = null; slot.bigUntil = 0; store.set('mm.slots', SL); return; }
+  if (S.overlay === 'dice') { S.overlay = null; return; }
+  if (S.upright) { S.sub = false; return; }
+  if (S.mode === 'ready' && !S.wifi && !S.overlay) { S.overlay = 'settings'; S.sel = 0; }
+});
+document.getElementById('rot').addEventListener('click', e => {
+  S.upright = !S.upright;
+  if (S.overlay !== 'slots' && S.overlay !== 'dice') S.overlay = null;
+  if (S.upright && S.mode !== 'recording' && !S.overlay) { S.pickC = S.tag ? S.tag.c : 0; S.sub = false; }
+  document.getElementById('stickwrap').classList.toggle('up', S.upright && S.overlay !== 'dice');
+  e.target.textContent = S.upright ? 'Turn sideways' : 'Turn upright';
+});
+document.getElementById('usb').addEventListener('click', e => {
+  S.usb = !S.usb; S.chargeSince = performance.now(); e.target.textContent = S.usb ? 'Unplug USB' : 'Plug in USB'; e.target.classList.toggle('on', S.usb);
+});
+
+// ================= the phone =================
+const SAMPLE = {
+  'work-proj': 'Idea for the dashboard: put the three overdue items at the top so nobody has to scroll. Add to list, sketch the new layout.',
+  'work-upd': 'Update for the team: the draft is with the reviewers, and the next version is due at the end of the month.',
+  'work-ai': 'Try having an AI write the first pass of the summary from the numbers, then edit it by hand.',
+  'run-place': 'The path along the river is flooded past the second bridge. Take the road instead.',
+  'run-thought': 'Keep the stick simple. It records, the phone does the thinking. Add to list, order a new strap.',
+  'run-run': 'Easy run, legs heavy for the first mile and fine after.',
+  'int-morn': 'Today I want to finish one thing before opening email.',
+  'int-mid': 'Block an hour for the presentation and nothing else.',
+  'int-eve': 'Stop at six, walk, no laptop.',
+  'rec': 'Reminder to check the battery life on the new firmware. Add to list, buy coffee filters.',
+};
+const DEFAULT_PROMPT = 'Rewrite this voice note as short, clear bullet points. Keep every idea and detail that was said; remove filler, repetition and false starts. Do not add anything that was not said. If there is a to-do or decision, put it on its own line starting with "Action:". Output only the bullet points.';
+let PROMPT = store.get('mm.prompt', DEFAULT_PROMPT);
+// A stand-in for Gemini Nano that follows the gist of the prompt: bullets, "Action:" lines, or a one-line summary.
+function TIDY(t, prompt = PROMPT) {
+  const sents = t.split(/(?<=\.)\s+/).filter(s => !/^add to list/i.test(s)).map(s => s.replace(/\.$/, ''));
+  if (/summar|one (line|sentence)/i.test(prompt)) return sents[0] + (sents.length > 1 ? ', and ' + sents.slice(1).map(x => x[0].toLowerCase() + x.slice(1)).join('; ') : '') + '.';
+  const act = /action/i.test(prompt), verb = /^(take|try|block|stop|check|order|show|add|keep|finish|buy|reminder)/i;
+  return sents.map(x => act && verb.test(x) ? 'Action: ' + x.replace(/^reminder to /i, '').replace(/^./, c => c.toUpperCase()) : '• ' + x).join('\n');
+}
+const phone = { notes: [], events: [], view: 'notes', journal: '', list: [], connected: false, nextId: 1, ptag: 'rec', recording: false, recT0: 0, pnum: 0, detail: null, raw: false, effect: '', paired: false, id: 'a91c7e02', fw: '2.14.0', look: 0, notifs: [], want: null, loaded: null };
+const tagOf = code => { for (const t of TAGS) { const i = t.codes.indexOf(code); if (i >= 0) return { label: t.cat + ' · ' + t.subs[i], color: t.color }; } return { label: 'No tag', color: GRAY }; };
+const hex = c => '#' + c.toString(16).padStart(6, '0');
+const clock = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+const dayLabel = d => { const n = new Date(); if (d.toDateString() === n.toDateString()) return 'Today'; return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }); };
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+function log(k, text) { phone.events.unshift({ k, text, at: new Date() }); }
+function syncline(t) { document.getElementById('syncline').textContent = t; }
+
+function render() {
+  const body = document.getElementById('body');
+  document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-selected', b.dataset.v === phone.view));
+  if (phone.view === 'notes') {
+    if (!phone.notes.length) { body.innerHTML = `<div class="empty"><img src="${uri('sit')}" alt=""><div><b>Nothing to muse on yet</b></div><div>Record on the stick, then tap Sync. Or use the Record tab.</div></div>`; return; }
+    body.innerHTML = `<div class="day">${dayLabel(phone.notes[0].at)}</div>` + phone.notes.map(n => {
+      const t = tagOf(n.code);
+      const bodyTxt = n.state === 'done' ? (n.tidy || n.text) : n.state === 'tidy' ? n.text : `Transcribing… chunk ${n.chunk} of ${n.chunks}`;
+      return `<div class="card" data-id="${n.id}"><div class="top"><span class="dot" style="background:${hex(t.color)}"></span>${t.label} <span style="font-weight:400;color:#53463b">${n.label}</span>${n.tidy ? '<span class="badge">✦ tidied</span>' : ''}<span class="time">${clock(n.at)} · ${fmt(n.seconds)}</span></div>
+        <div class="body ${n.state === 'tx' ? 'pending' : ''}">${esc(bodyTxt)}</div>
+        <div class="foot">${n.src === 'phone' ? 'recorded on the phone' : 'pulled ' + clock(n.at).toLowerCase()} · Riverside Park${n.took ? ' · transcribed in ' + n.took + ' s' : ''}${n.tidy ? ' · tidied by Gemini Nano' : ''}</div></div>`;
+    }).join('') + '<div style="text-align:center;font-size:10.5px;color:#857668;padding:6px">Tap a note to open it and its AI tidy-up</div>';
+    body.querySelectorAll('.card').forEach(c => c.onclick = () => { phone.detail = +c.dataset.id; phone.raw = false; phone.view = 'detail'; render(); });
+  } else if (phone.view === 'detail') {
+    const n = phone.notes.find(x => x.id === phone.detail); if (!n) { phone.view = 'notes'; return render(); }
+    const t = tagOf(n.code);
+    body.innerHTML = `<button class="back" id="back">‹ Notes</button>
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:${hex(t.color)};width:11px;height:11px"></span><b style="font-size:15px">${t.label}</b><span style="color:#53463b">${n.label}</span></div>
+      <div style="font-size:11px;color:#6b5b4c;margin-top:3px">${n.at.toLocaleDateString()} ${clock(n.at)} · ${fmt(n.seconds)} · ${n.src === 'phone' ? 'recorded on the phone' : n.code + '_' + String(n.label.slice(1)).padStart(4, '0') + '.opus'}${n.took ? ' · whisper base.en · transcribed in ' + n.took + ' s' : ''}</div>
+      <div style="font-size:11px;color:#b4581a;margin-top:2px">Pulled near Riverside Park</div>
+      <div class="chipset" style="margin-top:10px"><button class="pill">▶ Play</button>${['Room', 'Chorus'].map(e => `<button class="pill fx ${phone.effect === e ? 'on' : ''}" data-fx="${e}">${e}</button>`).join('')}</div>
+      ${n.state === 'tx' ? `<div class="ai"><div class="hd">Transcribing on the phone · chunk ${n.chunk} of ${n.chunks}</div></div>` : `
+      <div class="ai"><div class="hd"><span class="spark">✦</span>AI tidy-up · Gemini Nano, on this phone${n.tidyMs ? ' · ' + n.tidyMs + ' s' : ''}</div>
+        <div class="chipset" style="margin-top:8px"><button class="pill ${!phone.raw ? 'on' : ''}" id="tTidy" ${n.tidy ? '' : 'disabled'}>Tidied</button><button class="pill ${phone.raw ? 'on' : ''}" id="tRaw">As spoken</button></div>
+        <div class="txt">${n.state === 'tidy' ? '<span style="color:#b4581a">Tidying with your prompt…</span>' : esc(phone.raw || !n.tidy ? n.text : n.tidy)}</div>
+        <div class="acts"><button class="btn" id="again">✦ Tidy up again</button><button class="btn" id="claude">Send to Claude</button><button class="btn">Share</button></div>
+        <div style="font-size:10px;color:#857668;margin-top:6px">Uses the prompt in Settings → Tidy up. The words as spoken are always kept.</div></div>`}`;
+    document.getElementById('back').onclick = () => { phone.view = 'notes'; render(); };
+    body.querySelectorAll('.fx').forEach(b => b.onclick = () => { phone.effect = phone.effect === b.dataset.fx ? '' : b.dataset.fx; render(); });
+    const q = id => document.getElementById(id);
+    if (q('tTidy')) q('tTidy').onclick = () => { phone.raw = false; render(); };
+    if (q('tRaw')) q('tRaw').onclick = () => { phone.raw = true; render(); };
+    if (q('again')) q('again').onclick = () => { n.state = 'tidy'; phone.raw = false; render(); setTimeout(() => { n.tidy = TIDY(n.text); n.tidyMs = 3 + (Math.random() * 3 | 0); n.state = 'done'; log('cleaned', `Tidied ${n.label} again with Gemini Nano`); render(); }, 1100); };
+    if (q('claude')) q('claude').onclick = () => { log('shared', `Sent ${n.label} to Claude`); q('claude').textContent = 'Sent to Claude ✓'; };
+  } else if (phone.view === 'record') {
+    const el = phone.recording ? Math.floor((performance.now() - phone.recT0) / 1000) : 0;
+    body.innerHTML = `<div class="rec"><div class="sec">Tag</div><div class="tchips">${['rec', ...TAGS.flatMap(t => t.codes)].map(c => `<button class="tchip ${phone.ptag === c ? 'on' : ''}" data-tag="${c}" ${phone.recording ? 'disabled' : ''}>${tagOf(c).label}</button>`).join('')}</div>
+      <button class="big ${phone.recording ? 'on' : ''}" id="pbig">${phone.recording ? 'Stop' : 'Record'}</button>
+      <div style="font-size:18px;font-weight:700">${phone.recording ? fmt(el) : 'Tap to record'}</div>
+      <div style="color:#53463b;text-align:center;font-size:11.5px;max-width:240px">Same path as the stick: transcribed on the phone, tidied, journaled. Real time and place. Also on a home-screen widget and a Quick Settings tile.</div>
+      <img src="${uri('lounge')}" style="height:56px;image-rendering:pixelated" alt=""></div>`;
+    body.querySelectorAll('.tchip').forEach(b => b.onclick = () => { phone.ptag = b.dataset.tag; render(); });
+    document.getElementById('pbig').onclick = () => {
+      if (!phone.recording) { phone.recording = true; phone.recT0 = performance.now(); render(); return; }
+      phone.recording = false; const secs = Math.max(2, Math.round((performance.now() - phone.recT0) / 1000));
+      addNote({ code: phone.ptag, seconds: secs, label: 'P' + (++phone.pnum), src: 'phone' }); log('recorded', `Recorded ${tagOf(phone.ptag).label} P${phone.pnum} on the phone (${fmt(secs)})`);
+      phone.view = 'notes'; render();
+    };
+  } else if (phone.view === 'activity') {
+    body.innerHTML = `<div style="display:flex;justify-content:flex-end;padding:6px 0"><button class="btn" id="exp">Export log</button></div>` + (phone.events.length ? phone.events.map(e => `<div class="ev"><span class="k">${e.k}</span>${esc(e.text)} <span style="color:#857668">· ${clock(e.at)}</span></div>`).join('') : `<div class="empty"><img src="${uri('sleep')}" alt=""><div>Nothing has happened yet.</div></div>`);
+    document.getElementById('exp').onclick = () => { log('shared', 'Exported a diagnostic log (versions, settings, timings; no transcripts or places)'); render(); };
+  } else {
+    const full = S.usb && performance.now() - S.chargeSince > 12000;
+    body.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:center;padding:8px 0"><img src="${uri('lounge')}" style="height:44px;image-rendering:pixelated" alt=""><div><b>Marshy's Musings</b><br><span style="color:#53463b;font-size:11px">${phone.look ? 'Version 0.16.0' : 'Named for Tango, an orange cat of some standing. Version 0.16.0'}</span></div></div>
+      <div class="sec">Stick</div>
+      <div class="row"><div><b>${S.usb ? (full ? 'Battery: full' : 'Battery: charging') : 'Battery 82%'}</b><span>${S.usb ? 'Held at 82% until it is unplugged' : '4012 mV, read just now'}</span></div></div>
+      <div class="row"><div><b>${phone.paired ? 'Paired stick: ' + S.stickId : 'No stick paired yet'}</b><span>${phone.paired ? 'Syncs only with this stick, and only when it has new notes' : 'Tap Sync near the stick; it asks once'}</span></div>${phone.paired ? '<button class="btn" id="unpair">Unpair</button>' : ''}</div>
+      <div class="row"><div><b>Firmware: ${phone.fw}${phone.fw === '2.14.0' ? ' · available: 2.15.0 (loaded file)' : ' · up to date'}</b><span>${phone.fw === '2.14.0' ? 'Hold the stick near the phone and tap Update. It restarts by itself.' : 'Recordings and settings kept'}</span></div>${phone.fw === '2.14.0' ? '<button class="btn" id="upd">Update</button>' : ''}</div>
+      ${S.special === 'updating' ? `<div class="prog"><i style="width:${S.upd}%"></i></div>` : ''}
+      <div class="row"><div><b>Firmware files</b><span>Load a firmware .bin someone shared with you; the app checks it before sending</span></div><button class="btn" id="loadfw">Load file</button></div>
+      <div class="sec">Stick settings</div>
+      <div class="row"><div><b>Theme</b></div><select class="mini" id="wtheme">${THEMES.map((t, i) => `<option value="${i}" ${((phone.want || S).theme) === i ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="row"><div><b>Screen</b></div><select class="mini" id="wbright">${['Bright', 'Medium', 'Low'].map((t, i) => `<option value="${i}" ${((phone.want || S).bright) === i ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="row"><div><b>Recording format</b></div><select class="mini" id="wfmt">${FORMATS.map((f, i) => `<option value="${i}" ${((phone.want || S).fmt) === i ? 'selected' : ''}>${f.mark}</option>`).join('')}</select></div>
+      <div class="row"><div><span>${phone.want ? 'To send on the next connection' : 'Sent with "s key value" when the stick connects'}</span></div><button class="btn" id="sendnow">Send now</button></div>
+      <div class="row"><div><b>Sync in the background</b><span>The phone's radio wakes the app only when the stick has new notes</span></div><div class="sw"></div></div>
+      <div class="row"><div><b>Notifications</b><span>"Synced N notes", sounding at most 3 times an hour</span></div><div class="sw"></div></div>
+      <div class="row"><div><b>Delete from the stick after pulling</b><span>Only once the copy is verified</span></div><div class="sw"></div></div>
+      <div class="sec">Look</div>
+      <div class="chipset"><button class="pill ${phone.look ? '' : 'on'}" id="lk0">Tango</button><button class="pill ${phone.look ? 'on' : ''}" id="lk1">Minimal</button></div>
+      <div class="sec">Journal</div>
+      <div class="row"><div><b>musings.md</b><span>${phone.notes.filter(n => n.state === 'done').length} entries · plus per-category files · mirrored to Drive / Musings</span></div><button class="btn">Share</button></div>
+      <pre class="journal">${esc(phone.journal || "# Marshy's Musings\n\n(entries appear here as notes are transcribed)")}</pre>
+      <div class="sec">List</div>
+      <div class="row"><div><b>Code phrase: "add to list"</b><span>${phone.list.length} open in musings-list.md</span></div><div class="sw"></div></div>
+      ${phone.list.length ? `<pre class="journal">${esc(phone.list.map(i => '- [ ] ' + i).join('\n'))}</pre>` : ''}
+      <div class="sec">Tidy up (on-device AI)</div>
+      <div class="row"><div><b>Gemini Nano: Ready on this phone</b><span>Runs through Android AICore; nothing leaves the phone</span></div><button class="btn">Check</button></div>
+      <div class="row"><div><b>Tidy each transcript</b><span>After Whisper, rewrite the note with the prompt below</span></div><div class="sw"></div></div>
+      <div class="row" style="border:0"><div><b>Use the tidied text in journals and shares</b></div><div class="sw"></div></div>
+      <textarea class="prompt" id="prompt" aria-label="Tidy-up prompt">${esc(PROMPT)}</textarea>
+      <div class="chipset"><button class="btn" id="psave">Save prompt</button><button class="btn" id="preset">Reset to default</button><button class="btn" id="ptry">Try: one-line summary</button></div>
+      <div class="sec">Where</div>
+      <div class="row"><div><b>Note where the phone was</b><span>On. Last known position, no extra GPS use</span></div><div class="sw"></div></div>`;
+    const $ = id => document.getElementById(id);
+    if ($('unpair')) $('unpair').onclick = () => { phone.paired = false; log('sync', `Unpaired from stick ${S.stickId} (the stick still remembers this phone until it is told otherwise)`); render(); };
+    if ($('upd')) $('upd').onclick = runUpdate;
+    $('loadfw').onclick = () => { phone.loaded = 'M5VoiceRecorder-v2.15.0-app.bin'; log('sync', 'Loaded firmware file M5VoiceRecorder-v2.15.0-app.bin: image magic ok, marker M5VR-FW-VERSION=2.15.0, fits the slot'); render(); };
+    const want = () => ({ theme: +$('wtheme').value, bright: +$('wbright').value, fmt: +$('wfmt').value });
+    ['wtheme', 'wbright', 'wfmt'].forEach(id => $(id).onchange = () => { phone.want = want(); render(); });
+    $('sendnow').onclick = () => { phone.want = phone.want || want(); syncNow(false); };
+    $('lk0').onclick = () => { phone.look = 0; document.getElementById('pscreen').classList.remove('min'); render(); };
+    $('lk1').onclick = () => { phone.look = 1; document.getElementById('pscreen').classList.add('min'); render(); };
+    const pr = document.getElementById('prompt');
+    document.getElementById('psave').onclick = () => { PROMPT = pr.value.trim() || DEFAULT_PROMPT; store.set('mm.prompt', PROMPT); log('settings', 'Saved the tidy-up prompt'); render(); };
+    document.getElementById('preset').onclick = () => { PROMPT = DEFAULT_PROMPT; store.set('mm.prompt', PROMPT); render(); };
+    document.getElementById('ptry').onclick = () => { pr.value = 'Summarize this voice note in one sentence. Do not add anything that was not said.'; };
+  }
+}
+document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => { phone.view = b.dataset.v; render(); }));
+setInterval(() => { if ((phone.view === 'record' && phone.recording) || (phone.view === 'settings' && S.special === 'updating')) render(); }, 500);
+
+function addNote({ code, seconds, label, src }) {
+  const n = { id: phone.nextId++, code, seconds, label, src, at: new Date(), state: 'tx', chunks: Math.max(1, Math.ceil(seconds / 30)), chunk: 1, text: '', tidy: '' };
+  phone.notes.unshift(n); render();
+  const step = () => {
+    if (n.chunk < n.chunks) { n.chunk++; render(); setTimeout(step, 700); return; }
+    n.text = SAMPLE[code]; n.took = Math.max(3, Math.round(seconds / 3)); n.state = 'tidy';
+    log('transcribed', `Transcribed ${label} (${seconds} s, ${n.chunks} chunk${n.chunks > 1 ? 's' : ''}) with base.en in ${n.took} s`);
+    const items = [...n.text.matchAll(/add to list,?\s*([^.]+)/gi)].map(m => m[1].trim().replace(/^./, c => c.toUpperCase()));
+    if (items.length) { phone.list.push(...items); log('list', `Added to the list from ${label}: ${items.join('; ')}`); }
+    render();
+    setTimeout(() => {
+      n.tidy = TIDY(n.text); n.tidyMs = 2 + (Math.random() * 4 | 0); n.state = 'done'; log('cleaned', `Tidied ${label} with Gemini Nano in ${n.tidyMs} s`);
+      const day = n.at.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      if (!phone.journal) phone.journal = "# Marshy's Musings\n";
+      if (!phone.journal.includes('## ' + day)) phone.journal += '\n## ' + day + '\n';
+      phone.journal += `\n### ${clock(n.at)} · ${tagOf(code).label} (${label}, ${fmt(seconds)})\n_Riverside Park_\n\n${n.tidy}\n`;
+      render();
+    }, 900);
+  };
+  setTimeout(step, 700);
+}
+
+function banner(t) {
+  const now = Date.now(); phone.notifs = phone.notifs.filter(x => now - x < 3600000);
+  const loud = phone.notifs.length < 3; phone.notifs.push(now);
+  document.getElementById('bannertxt').textContent = t + (loud ? '' : ' (silent: 3 an hour already)');
+  const b = document.getElementById('banner'); b.hidden = false; clearTimeout(banner.t); banner.t = setTimeout(() => b.hidden = true, 3200);
+}
+function dialog(title, text, yes, no, onYes, onNo) {
+  const d = document.getElementById('dlg');
+  d.innerHTML = `<div class="dialog"><div class="box"><b>${title}</b><p>${text}</p><div class="row2"><button class="btn" id="dno" style="background:#fff;border:1px solid #dccfbf">${no}</button><button class="btn" id="dyes">${yes}</button></div></div></div>`;
+  document.getElementById('dyes').onclick = () => { d.innerHTML = ''; onYes(); };
+  document.getElementById('dno').onclick = () => { d.innerHTML = ''; onNo && onNo(); };
+}
+// Firmware 2.14 / app 0.16: one stick, one phone. "h <phone>" answers ok, new (no phone yet) or other.
+function handshake(go) {
+  if (phone.paired && S.owner === phone.id) return go();
+  if (!S.owner) {
+    syncline('Found a stick');
+    dialog('Found a stick nearby', `Use stick ${S.stickId} with this phone? It will only sync with this phone from now on.`, 'Use it', 'Not mine',
+      () => { S.owner = phone.id; phone.paired = true; log('sync', `Paired with stick ${S.stickId}`); render(); go(); },
+      () => { phone.connected = false; syncline('Ignored a stick'); log('sync', `Ignored stick ${S.stickId} ("Not mine")`); render(); });
+    return;
+  }
+  dialog('This stick has another phone', `Stick ${S.stickId} is paired with a different phone. Ask it to switch? Press KEY1 on the stick to allow.`, 'Ask the stick', 'Cancel', () => {
+    syncline('Waiting for KEY1 on the stick'); S.overlay = null; S.special = 'claim'; S.claimUntil = performance.now() + 30000;
+    S.claimCb = ok => { if (ok) { S.owner = phone.id; phone.paired = true; log('sync', `Stick ${S.stickId} said yes; paired`); render(); go(); } else { phone.connected = false; syncline('The stick said no'); log('sync', `Stick ${S.stickId} declined (KEY2 or no answer)`); render(); } };
+  }, () => { phone.connected = false; syncline('Watching for your stick'); });
+}
+function syncNow(auto) {
+  const btn = document.getElementById('sync');
+  if (S.mode === 'recording') { log('sync', 'The stick is recording; Bluetooth is off until it stops'); syncline('Stick is recording'); render(); return; }
+  if (S.wifi) { log('error', 'The stick is in web mode; Bluetooth is off'); render(); return; }
+  phone.connected = true; syncline('Connected · stick ' + S.stickId);
+  handshake(() => {
+    if (phone.want) { log('sync', `Sent stick settings: SET theme ${phone.want.theme}, bright ${phone.want.bright}, fmt ${phone.want.fmt}`); S.theme = phone.want.theme; S.bright = phone.want.bright; S.fmt = phone.want.fmt; store.set('mm.theme', S.theme); phone.want = null; }
+    if (!S.files.length) { log('sync', 'Connected: nothing new on the stick'); setTimeout(() => { phone.connected = false; syncline('Up to date'); }, 1500); render(); return; }
+    btn.textContent = 'Pulling…'; btn.disabled = true;
+    const files = S.files.splice(0).reverse();
+    files.forEach((f, i) => setTimeout(() => {
+      log('pulled', `Pulled ${tagOf(f.code).label} #${f.number} (${fmt(f.seconds)})`); log('deleted', `Removed ${f.name} from the stick`);
+      addNote({ code: f.code, seconds: f.seconds, label: '#' + f.number, src: 'stick' });
+      if (i === files.length - 1) { btn.textContent = 'Sync'; btn.disabled = false; log('sync', `Sync done: ${files.length} new note${files.length === 1 ? '' : 's'}; told the stick (m ${f.number}) so its new-notes flag clears`);
+        phone.connected = false; syncline(auto ? 'Synced on its own just now' : 'Synced just now'); banner(`Synced ${files.length} note${files.length === 1 ? '' : 's'}`); }
+    }, 400 + i * 600));
+  });
+  render();
+}
+document.getElementById('sync').addEventListener('click', () => syncNow(false));
+function runUpdate() {
+  if (!phone.paired) { log('error', 'Pair with the stick first (tap Sync near it)'); render(); return; }
+  if (S.mode === 'recording') { log('error', 'The stick is recording; try again when it stops'); render(); return; }
+  S.overlay = null; S.upright = false; document.getElementById('stickwrap').classList.remove('up'); document.getElementById('rot').textContent = 'Turn upright';
+  S.special = 'updating'; S.updT0 = performance.now(); log('sync', 'Updating the stick from 2.14.0 to 2.15.0 (1.49 MB)'); render();
+}
+render(); stat();
+</script>
+
+</body>
+</html>
