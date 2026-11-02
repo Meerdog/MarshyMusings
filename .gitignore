@@ -1,0 +1,15 @@
+# Gradle and Android Studio
+.gradle/
+.kotlin/
+build/
+app/build/
+app/.cxx/
+local.properties
+build.log
+*.iml
+.idea/
+captures/
+
+# The signing key: kept out of the public repository (see README, "Signing")
+*.keystore
+*.jks
